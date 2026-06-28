@@ -171,7 +171,17 @@ GameProfile {
 - [ ] Sikarugir 포크 방식: 전체 vendoring vs submodule vs 정식 GitHub fork
 - [ ] 프로파일 레포 분리 시점 (이 레포 내 폴더 vs 별도 레포)
 - [ ] 앱 이름/번들 ID 확정
-- [ ] UI 재작성 범위: AppKit `MainMenu.xib` 점진 개선 vs SwiftUI 신규 셸
+
+### 확정된 결정
+- [x] **UI 전략 = 하이브리드 (장기 방향)**: UI 셸은 **SwiftUI 신규**, 기존
+  **Objective-C 엔진은 유지**하고 브리징 헤더로 호출.
+  - 버림: 레거시 UI 셸(`MainMenu.xib`). 우리 UI는 "게임 중심"이라 사실상 새 프런트라
+    xib 점진 개선은 실익이 적음.
+  - 유지: `NSPortManager`·`NSWineskinPortDataWriter`·`Download`·`NSComputerInformation`
+    등 어려운 플러밍(Wine prefix 관리·다운로드·사양 감지)은 안 건드림.
+  - 근거: 동적 게임 그리드/실시간 판정 카드는 SwiftUI 바인딩에 적합 / xib는 머지·리뷰
+    불가에 가까워 오픈소스 부적합 / SwiftUI가 기여 진입장벽↓ → P5 커뮤니티 전략과 정합.
+  - 전환 방식: 점진적. 엔진 안정성 유지하며 프런트만 단계적으로 SwiftUI화.
 
 ---
 
