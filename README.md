@@ -25,7 +25,11 @@ The real value isn't the translation layer (that already exists) — it's the
 
 - ✅ Single-player Windows games (e.g. RDR2 story mode)
 - ✅ Fully open-source stack (no Apple D3DMetal)
-- ❌ No anti-cheat bypass → competitive multiplayer (Overwatch, etc.) is **out of scope**
+- ❌ **Never** an anti-cheat bypass — competitive multiplayer (Overwatch, etc.) is out of scope *today*
+- 🎯 **Long-term:** we will keep petitioning anti-cheat vendors and publishers to grant
+  *official* Mac/Wine support (the path Linux/Proton took — sanctioned enablement, not bypass).
+  Our strict no-bypass stance is exactly what earns the credibility to make that ask.
+  See [PLAN.md](PLAN.md) §9 / P5.
 
 ## License
 

@@ -61,11 +61,19 @@ Apple Silicon에서 넘어야 할 3개의 벽:
 ## 4. GUI 베이스 결정 — Sikarugir 포크
 
 - **베이스**: [Sikarugir](https://github.com/Sikarugir-App/Sikarugir) (구 Kegworks, 구 Wineskin)
-  - Swift/SwiftUI, 맥 네이티브
-  - DXVK/DXMT/D3DMetal 백엔드 토글 이미 내장 → 우리는 D3DMetal 토글만 비활성/제거
+  - ⚠️ **정정**: SwiftUI 아님. 실제 앱 소스는
+    [`Sikarugir-foss-sources`](https://github.com/Sikarugir-App/Sikarugir-foss-sources)로
+    **Objective-C / AppKit** (Wineskin 혈통, 클래스명 `Wineskin*` 그대로). UI는 단일
+    `MainMenu.xib` 한 개 — 레거시 단일 창.
+  - 메인 `Sikarugir` 레포는 배포용(D3DMetal 바이너리 + 문서). 번역 레이어들(dxmt, d9mt,
+    dxvk, MoltenVK, wine)은 org 내 개별 레포로 관리됨.
+  - DXVK/DXMT/D3DMetal/WineD3D 백엔드 토글 내장 → 우리는 D3DMetal 토글만 비활성/제거
   - 활발히 유지보수 중 (Whisky는 2025-04 중단됨 → 베이스 부적합)
+- **재활용 가능한 기존 자산**: `NSComputerInformation`(사양 감지), `Download`/`NSWebUtilities`
+  (엔진 다운로드), `NSDropIconView`·`NSProgressView`(드래그앤드롭·진행 UI),
+  `NSPortManager`(래퍼 데이터 모델).
 - **포크 전략**: GPLv3 호환 확인 후 vendoring/포크. 상류(upstream) 변경은 수동 추적.
-- **우리가 추가하는 차별화 레이어**: §6 프로파일 시스템.
+- **우리가 추가하는 차별화 레이어**: §6 프로파일 시스템 + §11 UX 재설계.
 
 ---
 
@@ -163,3 +171,34 @@ GameProfile {
 - [ ] Sikarugir 포크 방식: 전체 vendoring vs submodule vs 정식 GitHub fork
 - [ ] 프로파일 레포 분리 시점 (이 레포 내 폴더 vs 별도 레포)
 - [ ] 앱 이름/번들 ID 확정
+- [ ] UI 재작성 범위: AppKit `MainMenu.xib` 점진 개선 vs SwiftUI 신규 셸
+
+---
+
+## 11. UX 재설계 — 차별화의 본체
+
+번역 플러밍은 빌려 쓴다. **우리 제품 가치는 전부 경험 레이어에 있다.** UX에서 차별화
+못 하면 Sikarugir 재포장일 뿐이다.
+
+### Sikarugir(래퍼 빌더) UX 갭 → 우리 개선
+
+| Sikarugir의 한계 (코드로 확인됨) | 우리 개선 |
+|---|---|
+| **"Port/래퍼" 중심** 데이터 모델(`NSPortManager`) — 먼저 래퍼 만들고 exe 연결 | **게임 중심** 라이브러리 그리드. "뭐 만들까"가 아니라 "뭐 하고 싶어?" |
+| 백엔드를 **유저가 직접** 선택 (DX 버전 알아야 함) | **자동 선택 + 배지** ("DXMT 사용 — 이 게임에 최적"), 고급에서 override |
+| 될지 안 될지 **안 알려줌** (`NSComputerInformation`은 있으나 판정 UX 없음) | **설치 전 "내 맥에서 돼?" 판정 카드** — ✅/🟡/🔴/⛔ + 칩×RAM 근거 |
+| prefix·engine·winetricks·DLL override **전문용어 범벅** | **무전문용어 위저드** — 프로파일이 기본값 자동, 고급은 숨김 |
+| 첫 실행 **스피너만** | **정직한 진행 표시** + 예상 FPS/화질 사전 고지 |
+| 에러 = **raw Wine 로그** | **사람 말로 번역된 에러** + 추천 조치 |
+| 게임별 사회적 증거 없음 | **커뮤니티 호환성 카드** (프로파일 DB 연동) |
+
+### 플래그십 화면 (목업 완료, P1 타깃)
+1. **자동 감지된 "내 맥" 스트립** — 칩·RAM·macOS·Rosetta 상태 (`NSComputerInformation` 재활용)
+2. **게임 중심 라이브러리** — 카드마다 DX 버전 · 백엔드 · 판정 배지(✅🟡🔴⛔)
+3. **"이 게임, 내 맥에서 돼?" 상세 카드** — GPU/RAM/백엔드/안티치트 항목별 판정 + 예상 성능
+
+### 우선순위
+- **임팩트 최상**: ① 게임 중심 라이브러리 + ② 설치 전 판정 카드
+  → "Sikarugir엔 없고 우리한텐 있는" 첫인상을 만드는 두 가지.
+- 백엔드(화면 뒤): per-game 프로파일 DB(§6), 사양 판정 로직(AGENTS.md §3 루브릭 보정),
+  에러 번역 파이프라인.
