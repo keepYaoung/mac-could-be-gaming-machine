@@ -24,7 +24,10 @@ The real value isn't the translation layer (that already exists) — it's the
 ## Scope
 
 - ✅ Single-player Windows games (e.g. RDR2 story mode)
-- ✅ Fully open-source stack (no Apple D3DMetal)
+- ✅ Open-source app (GPLv3). Open backends (DXMT/DXVK/vkd3d + MoltenVK) by default
+- ✅ D3DMetal supported as an optional, **user-provided** backend (not bundled — license
+  forbids redistribution; the app loads it from your own machine). Bundling rights are a
+  long-term advocacy goal with Apple
 - ❌ **Never** an anti-cheat bypass — competitive multiplayer (Overwatch, etc.) is out of scope *today*
 - 🎯 **Long-term:** we will keep petitioning anti-cheat vendors and publishers to grant
   *official* Mac/Wine support (the path Linux/Proton took — sanctioned enablement, not bypass).

@@ -29,6 +29,12 @@ runtimes/bin/
 *.tar.xz
 *.tar.gz
 
+# D3DMetal — proprietary, NC-only, redistribution forbidden. NEVER commit/bundle.
+# Loaded as a user-provided external component on the user's own machine.
+D3DMetal/
+**/D3DMetal*
+*.d3dmetal
+
 # Logs
 *.log
 logs/

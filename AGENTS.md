@@ -83,19 +83,25 @@ the prefix-creating commands.
 
 ## 2. Backend selection rules
 
-Map the game's graphics API to a backend. Apple D3DMetal is intentionally excluded.
+Map the game's graphics API to a backend.
 
 | Game API | Backend | Path |
 |---|---|---|
+| **D3D12** | **D3DMetal** (best perf) / vkd3d-proton + MoltenVK (open fallback) | DX12 → Metal / DX12 → Vulkan → Metal |
 | **D3D11** | **DXMT** (preferred) | DX11 → Metal (direct) |
-| D3D11 (fallback) | DXVK + MoltenVK | DX11 → Vulkan → Metal |
-| **D3D12** | **vkd3d-proton + MoltenVK** | DX12 → Vulkan → Metal |
+| D3D11 (fallback) | DXVK + MoltenVK / D3DMetal | DX11 → Vulkan → Metal |
 | **D3D9 / D3D10** | DXVK + MoltenVK | DX → Vulkan → Metal |
 | OpenGL | Wine native GL → MoltenVK/Metal | varies |
 | Old Win32 / GDI | Wine alone | no graphics translation needed |
 
 Prefer **DXMT for DX11** on lower-tier chips (less CPU/memory overhead than the
 Vulkan path). Use the Vulkan path when DXMT has known issues for that title.
+
+**D3DMetal caveat (license):** D3DMetal gives the best DX12 performance, but its license
+forbids redistribution. The app must **never bundle it** — it is loaded as a
+**user-provided external component** the user obtains on their own machine. If D3DMetal
+isn't present, fall back to the open Vulkan path (vkd3d/DXVK + MoltenVK). Treat D3DMetal
+as an optional accelerator, never a hard dependency. See [PLAN.md](PLAN.md) §5 / §9.
 
 ---
 
@@ -164,9 +170,13 @@ get officially enabled over time." See [PLAN.md](PLAN.md) §9 / P5.
 
 - **Plan of record**: [PLAN.md](PLAN.md). Keep it in sync if scope changes.
 - **License**: GPLv3. Any vendored upstream (Wine, DXMT, Sikarugir) must keep its
-  attribution and be license-compatible.
-- **GUI base**: fork of [Sikarugir](https://github.com/Sikarugir-App/Sikarugir)
-  (Swift/SwiftUI). Disable/remove the D3DMetal backend toggle (proprietary).
-- **Never commit**: Wine prefixes, downloaded runtimes, `.dmg`/`.pkg`, logs
-  (see `.gitignore`).
+  attribution and be license-compatible. **Do not vendor CC BY-NC-SA content** (e.g.
+  AppleGamingWiki data) — link only; it is GPL-incompatible.
+- **GUI base**: built on [Sikarugir](https://github.com/Sikarugir-App/Sikarugir) — actually
+  **Objective-C / AppKit** (source: `Sikarugir-foss-sources`), not SwiftUI. Long-term UI
+  direction is a **new SwiftUI shell over the retained Objective-C engine** (PLAN.md §10).
+- **D3DMetal**: keep it as a selectable backend, but **never commit/bundle the binary** —
+  load it as a user-provided external component (license forbids redistribution).
+- **Never commit**: D3DMetal binaries, Wine prefixes, downloaded runtimes, `.dmg`/`.pkg`,
+  logs (see `.gitignore`).
 - **Per-game profiles**: JSON/YAML following the schema in PLAN.md §6.
