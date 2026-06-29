@@ -18,11 +18,17 @@ find_library(METAL Metal REQUIRED)
 find_library(FOUNDATION Foundation REQUIRED)
 find_library(QUARTZCORE QuartzCore REQUIRED)
 
-# M0 — headless device probe (validates toolchain before any windowing)
+# M0 — headless device probe (validates toolchain).
 add_executable(device_probe src/probe/main.cpp)
 target_include_directories(device_probe PRIVATE "${METAL_CPP_DIR}")
 target_compile_options(device_probe PRIVATE -fno-objc-arc)   # metal-cpp manages refcounts itself
 target_link_libraries(device_probe PRIVATE ${METAL} ${FOUNDATION} ${QUARTZCORE})
 
-# M1+ (hello_triangle, windowed) is added once M0 builds clean — it additionally
-# needs the metal-cpp AppKit/MetalKit extension headers + AppKit/MetalKit frameworks.
+# Offscreen samples (M1 clear, M3 triangle) — core metal-cpp only, no windowing
+# (DESIGN.md D-6: render-to-texture + PPM is verifiable and needs no AppKit).
+foreach(sample m1_clear m3_triangle)
+  add_executable(${sample} src/samples/${sample}/main.cpp)
+  target_include_directories(${sample} PRIVATE "${METAL_CPP_DIR}" src)
+  target_compile_options(${sample} PRIVATE -fno-objc-arc)
+  target_link_libraries(${sample} PRIVATE ${METAL} ${FOUNDATION} ${QUARTZCORE})
+endforeach()

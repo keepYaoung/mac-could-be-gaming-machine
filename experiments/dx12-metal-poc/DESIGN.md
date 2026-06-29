@@ -115,6 +115,11 @@ experiments/dx12-metal-poc/
 - **D-3 배리어 미구현** — Metal 자동 hazard tracking에 의존(삼각형/텍스처엔 충분). D3D12 명시 배리어·untracked 고속화는 꼬리.
 - **D-4 단일스레드** — DXMT 3-스레드 청크 모델 미도입.
 - **D-5 입력 표면 = HelloTriangle/HelloTexture 최소집합** — 그 이상 D3D12 API는 PoC 밖.
+- **D-6 윈도잉 없음 — 오프스크린 텍스처 렌더 + PPM 저장.** 창/이벤트루프(가장 깨지기 쉬운 블라인드
+  코드) 회피 + **픽셀 프로그램적 검증** 가능 + AppKit/MetalKit 확장 헤더 불필요(core metal-cpp만).
+- **D-7 셰이더 순서: MSL-first로 하버스트 먼저 증명(M3-prime) → MSC swap-in이 진짜 M2.**
+  MSL 인라인 셰이더로 커맨드/PSO/정점/드로우를 먼저 검증(셰이더 *번역*은 아직 아님). dxc+Metal Shader
+  Converter 설치 후 같은 삼각형을 **DXIL→metallib로 갈아끼워** 번역을 증명한다.
 
 ## 6. 리스크 / 검증 선행
 - ⚠ MSC 바인딩 규약은 `metal_irconverter_runtime.h` **실물 헤더로 재확인** 후 M4 착수(RESEARCH §8).

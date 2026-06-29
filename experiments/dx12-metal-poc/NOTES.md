@@ -15,11 +15,17 @@
 
 ## 마일스톤
 
-- [ ] **M0 — 환경**: metal-cpp 확보, Metal Shader Converter 설치/실행 확인
-- [ ] **M1 — clear**: DX12 커맨드 추상 → Metal CommandBuffer 매핑, 화면 clear color
-- [ ] **M2 — 셰이더**: 간단 HLSL → DXIL → MSL (Metal Shader Converter) 파이프 통과
-- [ ] **M3 — 삼각형**: 정점 버퍼 + PSO→PipelineState → **삼각형 렌더** ← 1차 성공 기준
-- [ ] **M4 — 텍스처**: 텍스처 샘플링 데모
+- [x] **M0 — 환경**: metal-cpp(`third_party/metal-cpp`) + device_probe 빌드·실행. **PASS**
+      (Apple M4 / Argument Buffers Tier2 / Apple7 ✅). *MSC·dxc는 M2에서.*
+- [x] **M1 — clear**: 오프스크린 텍스처에 clear → PPM. 검증 center=26 102 204(=0.1/0.4/0.8). ✅
+- [ ] **M2 — 셰이더 번역 (진짜)**: HLSL→`dxc`→DXIL→**Metal Shader Converter**→metallib 로드.
+      ⛔ **dxc + metal-shaderconverter 설치 필요** (다음 블로커).
+- [~] **M3-prime — 삼각형 하버스트**: 정점버퍼+PSO+draw, 오프스크린, **MSL 셰이더로** 검증
+      (colored_px=16200). ✅ *단 셰이더 번역은 미증명 — M2에서 metallib로 swap.*
+- [ ] **M4 — 텍스처**: 텍스처 샘플 + MSC argument-buffer 바인딩 규약(RESEARCH §7).
+
+> 빌드(수동, cmake 불필요):
+> `clang++ -std=c++17 -I third_party/metal-cpp -I src src/samples/<m>/main.cpp -framework Metal -framework Foundation -framework QuartzCore -o build/<m>`
 
 ## 매핑 메모 (DX12 ↔ Metal, §14.1)
 
@@ -43,3 +49,6 @@
 
 - 2026-06-30 — 브랜치 생성, PoC 스코프 확정 (삼각형까지를 1차 성공 기준으로). RDR2
   베이스라인 측정과 병행/이후 진행.
+- 2026-06-30 — 리서치 종합(RESEARCH.md) + 설계(DESIGN.md) 완료.
+- 2026-06-30 — **M0 PASS**(M4/Tier2/Apple7). **M1·M3-prime 구현·검증**(오프스크린+PPM, D-6).
+  코드리뷰(medium) 1건 반영: 공통 헬퍼 `src/poc_common.h` 추출. 다음 = **M2(dxc+MSC 설치 후 셰이더 번역)**.
