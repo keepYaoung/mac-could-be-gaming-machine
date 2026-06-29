@@ -1,0 +1,7 @@
+# user-supplied SDK (M0) — not vendored
+third_party/metal-cpp/
+
+# build + shader artifacts
+build/
+*.dxil
+*.metallib
