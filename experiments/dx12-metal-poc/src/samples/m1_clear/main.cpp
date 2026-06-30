@@ -25,6 +25,7 @@ int main() {
     MTL::Device* device = MTL::CreateSystemDefaultDevice();
     if (device == nullptr) { std::printf("FAIL: no Metal device\n"); return 1; }
     MTL::CommandQueue* queue = device->newCommandQueue();
+    if (queue == nullptr) { std::printf("FAIL: no command queue\n"); return 1; }
 
     const uint32_t W = 256, H = 256;
 
@@ -35,6 +36,7 @@ int main() {
     td->setUsage(MTL::TextureUsageRenderTarget | MTL::TextureUsageShaderRead);
     td->setStorageMode(MTL::StorageModeShared);
     MTL::Texture* tex = device->newTexture(td);
+    if (tex == nullptr) { std::printf("FAIL: no render-target texture\n"); return 1; }
 
     // Render pass: clear to (0.10, 0.40, 0.80).
     MTL::RenderPassDescriptor* rp = MTL::RenderPassDescriptor::alloc()->init();
@@ -53,7 +55,10 @@ int main() {
 
     // Read back + write PPM.
     std::vector<uint8_t> px = poc::read_rgba8(tex, W, H);
-    poc::write_ppm("build/m1_clear.ppm", px, W, H);
+    if (!poc::write_ppm("build/m1_clear.ppm", px, W, H)) {
+        std::printf("FAIL: could not write build/m1_clear.ppm (run from PoC root; build/ must exist)\n");
+        return 1;
+    }
 
     const size_t mid = (static_cast<size_t>(H / 2) * W + W / 2) * 4;
     std::printf("M1 OK: wrote build/m1_clear.ppm  center rgb = %d %d %d  (expect ~26 102 204)\n",

@@ -42,6 +42,7 @@ int main() {
     MTL::Device* device = MTL::CreateSystemDefaultDevice();
     if (device == nullptr) { std::printf("FAIL: no Metal device\n"); return 1; }
     MTL::CommandQueue* queue = device->newCommandQueue();
+    if (queue == nullptr) { std::printf("FAIL: no command queue\n"); return 1; }
 
     // Compile the (MSL) shader library at runtime.
     NS::Error* err = nullptr;
@@ -76,12 +77,14 @@ int main() {
          0.7f, -0.7f, 0.0f, 1.0f,   0.0f, 0.0f, 1.0f, 1.0f,  // right  — blue
     };
     MTL::Buffer* vbuf = device->newBuffer(verts, sizeof(verts), MTL::ResourceStorageModeShared);
+    if (vbuf == nullptr) { std::printf("FAIL: no vertex buffer\n"); return 1; }
 
     // Offscreen render target.
     MTL::TextureDescriptor* td = MTL::TextureDescriptor::texture2DDescriptor(fmt, W, H, false);
     td->setUsage(MTL::TextureUsageRenderTarget | MTL::TextureUsageShaderRead);
     td->setStorageMode(MTL::StorageModeShared);
     MTL::Texture* tex = device->newTexture(td);
+    if (tex == nullptr) { std::printf("FAIL: no render-target texture\n"); return 1; }
 
     MTL::RenderPassDescriptor* rp = MTL::RenderPassDescriptor::alloc()->init();
     MTL::RenderPassColorAttachmentDescriptor* c0 = rp->colorAttachments()->object(0);
@@ -101,7 +104,10 @@ int main() {
 
     // Read back + write PPM, and verify a triangle actually rendered.
     std::vector<uint8_t> px = poc::read_rgba8(tex, W, H);
-    poc::write_ppm("build/m3_triangle.ppm", px, W, H);
+    if (!poc::write_ppm("build/m3_triangle.ppm", px, W, H)) {
+        std::printf("FAIL: could not write build/m3_triangle.ppm (run from PoC root; build/ must exist)\n");
+        return 1;
+    }
 
     // Verification: count pixels that aren't the (13,13,13) background.
     size_t colored = 0;
