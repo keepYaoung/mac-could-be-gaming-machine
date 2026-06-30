@@ -79,6 +79,13 @@ Only after the user understands the verdict, proceed to install the stack and cr
 a per-game profile (see [PLAN.md](PLAN.md) §6 for the profile schema). The user runs
 the prefix-creating commands.
 
+**Non-Latin languages (fonts):** if the user's UI language is CJK (Korean/Chinese/
+Japanese), provision fonts during setup — install `corefonts` + `cjkfonts` via
+winetricks into the prefix. Otherwise Steam / the launcher / the game UI render text
+as garbled boxes (□□□). This is a prefix-font issue, **not** a graphics-backend bug,
+so don't misdiagnose it as D3DMetal/rendering. See [PLAN.md](PLAN.md) §11 (onboarding
+language step — long-term this is auto-provisioned from a one-time language pick).
+
 ---
 
 ## 2. Backend selection rules
