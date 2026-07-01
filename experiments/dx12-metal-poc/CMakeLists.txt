@@ -32,7 +32,11 @@ target_link_libraries(device_probe PRIVATE ${METAL} ${FOUNDATION} ${QUARTZCORE})
 #                   pipeline (proves shader translation). Requires the
 #                   metallibs built by tools/build_shaders.sh, loaded at run
 #                   time from build/shaders/.
-foreach(sample m1_clear m3_triangle m2_translated)
+#   m4_texture    : M4 textured fullscreen quad via MSC argument buffers
+#                   (TLAB + resource/sampler descriptor heaps). Uses
+#                   /usr/local/include/metal_irconverter_runtime for the
+#                   inline IRDescriptorTableSet* helpers (no lib link).
+foreach(sample m1_clear m3_triangle m2_translated m4_texture)
   add_executable(${sample} src/samples/${sample}/main.cpp)
   target_include_directories(${sample} PRIVATE "${METAL_CPP_DIR}" src)
   target_compile_options(${sample} PRIVATE -fno-objc-arc)

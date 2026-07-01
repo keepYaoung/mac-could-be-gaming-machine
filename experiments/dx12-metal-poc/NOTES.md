@@ -30,7 +30,29 @@
       HLSL→DXIL은 순수 컴파일 타임).
 - [x] **M3-prime — 삼각형 하버스트**: 정점버퍼+PSO+draw, 오프스크린, **MSL 셰이더로** 검증
       (colored_px=16200). ✅ M2로 실제 셰이더 번역까지 증명 완료.
-- [ ] **M4 — 텍스처**: 텍스처 샘플 + MSC argument-buffer 바인딩 규약(RESEARCH §7).
+- [x] **M4 — 텍스처** ✅ **PASS.** 8×8 red/blue 체커 → 256×256 풀스크린 quad,
+      MSC argument-buffer 규약(RESEARCH §7) 실전 검증.
+      결과: `red=32768 blue=32768 clear=0 center=(255,0,0)` (기대 그대로).
+      HLSL 루트시그: `DescriptorTable(SRV(t0)) + StaticSampler(s0, linear/clamp)`.
+      MSC가 emit한 3개 argument buffer 모두 필요 (metallib의 `strings`에서
+      `struct.top_level_global_ab / res_desc_heap_ab / smp_desc_heap_ab` 확인):
+      · **TLAB** at `kIRArgumentBufferBindPoint=2` (VS+PS): root param 하나당 1
+        entry, root param 0(=descriptor table) → `gpuVA = resHeap.gpuAddress()`
+      · **res_desc_heap** at `kIRDescriptorHeapBindPoint=0` (PS): SRV(t0) → 1
+        entry, `IRDescriptorTableSetTexture(&e, tex, 0.f, 0)`
+      · **smp_desc_heap** at `kIRSamplerHeapBindPoint=1` (PS): StaticSampler도
+        heap 통해 참조. `IRDescriptorTableSetSampler(&e, samp, 0.f)` — sampler는
+        반드시 `setSupportArgumentBuffers(true)`로 만들어야 `gpuResourceID`
+        접근 가능
+      · `enc->useResource(tex, MTL::ResourceUsageRead, MTL::RenderStageFragment)`
+        로 residency 명시 (arg-buffer 간접 참조라 인코더가 자동 감지 못 함)
+      정점 layout은 M2 규약 그대로: `position0`→attribute(11), `texcoord0`→attribute(12).
+      Runtime helper는 libmetalirconverter 링크 없이 `IR_RUNTIME_METALCPP +
+      IR_PRIVATE_IMPLEMENTATION` 매크로 한 번만 정의하면 헤더 인라인으로 해결.
+      크래시 함정 발견: `MTL::TextureDescriptor::texture2DDescriptor()`는
+      autoreleased 팩토리 → 명시적 `release()` 시 종료 시점에 double-free
+      SIGSEGV (렌더 자체는 이미 완료된 상태). alloc()->init() 생성 디스크립터만
+      명시 release.
 
 > 빌드(수동, cmake 불필요):
 > `clang++ -std=c++17 -I third_party/metal-cpp -I src src/samples/<m>/main.cpp -framework Metal -framework Foundation -framework QuartzCore -o build/<m>`
@@ -65,3 +87,9 @@
   네이티브 dxc와 등가로 취급. m2_translated PPM이 M3-prime과 **바이트 단위 동일**하여
   translated pipeline이 무손실임을 증명. `build_shaders.sh`가 native dxc / wine dxc.exe
   둘 다 자동 지원. **다음 = M4 (텍스처 + argument-buffer 실전 규약)**.
+- 2026-07-01 — **M4 PASS**. `DescriptorTable(SRV(t0)) + StaticSampler` → 3-way argument
+  buffer(TLAB/res_heap/smp_heap) 바인딩 검증. 픽셀 정확도 100% (red 32768 / blue 32768 /
+  clear 0, center=(255,0,0)). MSC 규약 확정: root param 1개당 TLAB entry 1개, descriptor
+  table root param의 gpuVA는 해당 heap의 `gpuAddress()`. StaticSampler도 실제 sampler heap
+  entry가 필요 (셰이더 심볼에 `smp_desc_heap_ab` 존재). runtime 헤더는 링크 없이 매크로
+  인라인. PoC 스코프(§14.5) — 최소 삼각형 + 텍스처 데모 하나 — **완료**.

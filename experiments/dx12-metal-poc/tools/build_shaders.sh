@@ -63,13 +63,19 @@ fi
 
 echo "dxc: ${DXC_CMD[*]}"
 
-# Vertex + pixel stages from the single source file.
+# M2 — untextured triangle (color from vertex attribute).
 "${DXC_CMD[@]}" -T vs_6_0 -E VSMain "$SRC/triangle.hlsl" -Fo "$OUT/triangle_vs.dxil"
 "${DXC_CMD[@]}" -T ps_6_0 -E PSMain "$SRC/triangle.hlsl" -Fo "$OUT/triangle_ps.dxil"
+
+# M4 — fullscreen quad sampling Texture2D via DescriptorTable(SRV(t0)).
+"${DXC_CMD[@]}" -T vs_6_0 -E VSMain "$SRC/hello_texture.hlsl" -Fo "$OUT/htex_vs.dxil"
+"${DXC_CMD[@]}" -T ps_6_0 -E PSMain "$SRC/hello_texture.hlsl" -Fo "$OUT/htex_ps.dxil"
 
 # DXIL -> metallib. (DESIGN.md D-1: MSC is the PoC shader path; the open layer
 # would instead reuse vkd3d's dxil-spirv front-end. RESEARCH.md §3.3.)
 metal-shaderconverter "$OUT/triangle_vs.dxil" -o "$OUT/triangle_vs.metallib"
 metal-shaderconverter "$OUT/triangle_ps.dxil" -o "$OUT/triangle_ps.metallib"
+metal-shaderconverter "$OUT/htex_vs.dxil"     -o "$OUT/htex_vs.metallib"
+metal-shaderconverter "$OUT/htex_ps.dxil"     -o "$OUT/htex_ps.metallib"
 
-echo "ok -> $OUT/{triangle_vs,triangle_ps}.metallib"
+echo "ok -> $OUT/{triangle_vs,triangle_ps,htex_vs,htex_ps}.metallib"
