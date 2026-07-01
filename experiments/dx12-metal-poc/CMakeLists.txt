@@ -24,9 +24,15 @@ target_include_directories(device_probe PRIVATE "${METAL_CPP_DIR}")
 target_compile_options(device_probe PRIVATE -fno-objc-arc)   # metal-cpp manages refcounts itself
 target_link_libraries(device_probe PRIVATE ${METAL} ${FOUNDATION} ${QUARTZCORE})
 
-# Offscreen samples (M1 clear, M3 triangle) — core metal-cpp only, no windowing
+# Offscreen samples — core metal-cpp only, no windowing
 # (DESIGN.md D-6: render-to-texture + PPM is verifiable and needs no AppKit).
-foreach(sample m1_clear m3_triangle)
+#   m1_clear      : M1 clear-color offscreen
+#   m3_triangle   : M3-prime triangle with hand-written MSL (harness proof)
+#   m2_translated : M2 same triangle rendered from a HLSL->DXIL->metallib
+#                   pipeline (proves shader translation). Requires the
+#                   metallibs built by tools/build_shaders.sh, loaded at run
+#                   time from build/shaders/.
+foreach(sample m1_clear m3_triangle m2_translated)
   add_executable(${sample} src/samples/${sample}/main.cpp)
   target_include_directories(${sample} PRIVATE "${METAL_CPP_DIR}" src)
   target_compile_options(${sample} PRIVATE -fno-objc-arc)

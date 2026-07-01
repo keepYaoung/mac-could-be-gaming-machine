@@ -1,5 +1,6 @@
-# user-supplied SDK (M0) — not vendored
+# user-supplied SDKs — not vendored (see NOTES.md M0/M2)
 third_party/metal-cpp/
+third_party/dxc/
 
 # build + shader artifacts
 build/
