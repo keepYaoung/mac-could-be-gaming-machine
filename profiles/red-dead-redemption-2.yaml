@@ -1,0 +1,83 @@
+# Per-game profile — 프로파일 DB 첫 엔트리
+# 스키마: PLAN.md §6 (GameProfile) + 핸드오프 §5.
+# 상태: 진행 중. 확정된 것만 값으로, 미확정은 TBD로 표기(추측 금지 — AGENTS.md 골든룰 #5).
+# 근거 로그: docs/2026-07-01-rdr2-sikarugir-cef-investigation.md,
+#           docs/2026-07-02-rdr2-blocker-reconciliation.md, docs/rdr2-sikarugir-runbook.md
+
+id: steam-1174180                 # RDR2 Steam appid
+title: Red Dead Redemption 2
+store: steam                      # 확정 (2026-07-02)
+
+# --- 스택 ---
+engine: WS12WineSikarugir 10.0_x  # TBD: 실제 설치 버전(STEP 3-0 `wine --version`). 최소요구는 ⑤ 판정 후 확정.
+backend: d3dmetal                 # 게임 본체(DX12) ON / 런처(2D CEF) OFF
+forced_api: DX12                  # system.xml <API>kSettingAPI_DX12</API> (STEP 4)
+
+# --- Wine 튜닝 ---
+sync: esync                       # MSync 금지 (RDR2 램 누수/프레임 급락)
+windows_version: win10
+envVars:
+  WINEESYNC: "1"
+  WINEMSYNC: "0"
+  LANG: en_US.UTF-8               # 다이얼로그 tofu 판독용
+  LC_ALL: en_US.UTF-8
+dllOverrides: []                  # TBD: CX diff(STEP 3-2)에서 필요분 확정 시 기입
+
+# --- winetricks (확정분만) ---
+winetricks:
+  - vcrun2022
+  - corefonts                     # + cjkfonts (한국어 UI 시). 내장 rockstar 버브 금지 (#227)
+# cjkfonts: 한국어 렌더 필요 시 추가
+
+# --- 레지스트리 ---
+registry:
+  # RGL 무한로딩(서비스 기동 실패) 워크어라운드. 적용 후 효과 확인되면 confirmed 로.
+  - key: 'HKLM\System\CurrentControlSet\Control'
+    name: ServicesPipeTimeout
+    type: REG_SZ
+    value: "20000"
+    status: candidate             # candidate | confirmed
+  # CX diff(STEP 3-2)에서 ⑤를 없앤 결정적 키가 나오면 여기에 추가
+
+# --- 프리픽스 힌트 (재발 방지) ---
+winePrefixHints:
+  # ② Error 1002 영구 수정: Documents 트리 필수
+  documents_tree:
+    - 'drive_c/users/<user>/Documents/Rockstar Games/Social Club'
+    - 'drive_c/users/<user>/Documents/Rockstar Games/Red Dead Redemption 2/Settings'
+  # ③ CEF init: Launcher 실행 플래그
+  launcher_flags: '--no-sandbox --disable-gpu --in-process-gpu --disable-gpu-compositing'
+  d3dmetal_launcher: off          # 런처 2D 단계는 D3DMetal OFF
+
+# --- 런처 리스크 ---
+launcher_risk: HIGH               # RGL / Social Club (CEF). 현 블로커: ⑤ CEF int3.
+
+# --- 알려진 이슈 ---
+known_bugs:
+  - id: cef_int3
+    where: 'libcef+0x6b4be47 (int3 / STATUS_BREAKPOINT 0x80000003)'
+    status: BLOCKING              # 현 병목. 엔진 버전 델타 가설(reconciliation §2)로 재도전 중.
+    workaround: '최신 엔진(10.0_6+)으로 CX CEF 패치 유입분 확보 → 재기동 (STEP 3-0)'
+  - id: act1_shadow
+    where: 'Act 1 눈밭 그림자 글리치'
+    status: cosmetic
+  - id: saint_denis_memleak
+    where: '생드니 텍스처 메모리 릭'
+    workaround: '텍스처 Ultra 로 상향 시 완화'
+
+# --- 테스트 결과 ---
+tested:
+  chip: Apple M4
+  ram_gb: 16
+  macos: TBD                      # STEP -1 `sw_vers`
+  status: blocked                 # blocked(⑤) → 돌파 시 playable/good 으로 갱신
+  benchmark:                      # STEP 4 성공 후 기록
+    resolution: TBD
+    settings: TBD
+    avg_fps: TBD
+
+notes: >
+  CrossOver 트라이얼(Steam판, 동일 파일)에서 구동 성공 → 아키텍처 검증 완료.
+  남은 것은 CX 보틀 대비 델타 디버깅. ⑤(CEF int3)는 프리픽스 델타가 아니라
+  엔진(WineCX 소스) 델타일 개연성이 높음 → 최고 레버는 엔진 버전 정면돌파.
+  자세한 절차: docs/rdr2-sikarugir-runbook.md
